@@ -1,0 +1,154 @@
+<html>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.3/socket.io.js"></script>
+<script type="text/javascript">
+  console.log('io', io);
+  console.log('reloaded');
+  var socket = io();
+  let reloadActive = false;
+  console.log('socket', socket);
+  socket.on('disconnect', function (data) {
+    reloadActive = true;
+  });
+  socket.on('connect', function (data) {
+    console.log('connect!');
+    if (reloadActive) {
+      location.reload();
+    }
+  });
+  socket.on('draw', (data) => {
+    console.log('on draw');
+    draw(data.x, data.y);
+  });
+  socket.on('erase', () => {
+    erase();
+  });
+
+  var canvas, ctx, flag = false,
+    prevX = 0,
+    currX = 0,
+    prevY = 0,
+    currY = 0,
+    dot_flag = false;
+
+  var x = "black",
+    y = 2;
+
+  function init() {
+    canvas = document.getElementById('can');
+    ctx = canvas.getContext("2d");
+    w = canvas.width;
+    h = canvas.height;
+
+    canvas.addEventListener("mousemove", function (e) {
+      findxy('move', e)
+    }, false);
+    canvas.addEventListener("mousedown", function (e) {
+      findxy('down', e)
+    }, false);
+    canvas.addEventListener("mouseup", function (e) {
+      findxy('up', e)
+    }, false);
+    canvas.addEventListener("mouseout", function (e) {
+      findxy('out', e)
+    }, false);
+  }
+
+  function color(obj) {
+    switch (obj.id) {
+      case "green":
+        x = "green";
+        break;
+      case "blue":
+        x = "blue";
+        break;
+      case "red":
+        x = "red";
+        break;
+      case "yellow":
+        x = "yellow";
+        break;
+      case "orange":
+        x = "orange";
+        break;
+      case "black":
+        x = "black";
+        break;
+      case "white":
+        x = "white";
+        break;
+    }
+    if (x == "white") y = 14;
+    else y = 2;
+
+  }
+
+  function draw(pX, pY) {
+    ctx.beginPath();
+    ctx.fillStyle = x;
+    ctx.strokeStyle = x;
+    ctx.arc(pX || currX, pY || currY, 4, 0, 2 * Math.PI);
+    ctx.fill();
+    ctx.stroke();
+  }
+
+  function emitDraw() {
+    socket.emit('draw', {
+      x: currX,
+      y: currY
+    });
+  }
+
+  function erase() {
+    ctx.clearRect(0, 0, w, h);
+    document.getElementById("canvasimg").style.display = "none";
+  }
+
+  function emitErase() {
+    socket.emit('erase');
+  }
+
+  function save() {
+    document.getElementById("canvasimg").style.border = "2px solid";
+    var dataURL = canvas.toDataURL();
+    document.getElementById("canvasimg").src = dataURL;
+    document.getElementById("canvasimg").style.display = "inline";
+  }
+
+  function findxy(res, e) {
+    if (res == 'down') {
+      prevX = currX;
+      prevY = currY;
+      currX = e.clientX - canvas.offsetLeft;
+      currY = e.clientY - canvas.offsetTop;
+
+      flag = true;
+      dot_flag = true;
+      if (dot_flag) {
+        emitDraw();
+        dot_flag = false;
+      }
+    }
+    if (res == 'up' || res == "out") {
+      flag = false;
+    }
+    if (res == 'move') {
+      if (flag) {
+        prevX = currX;
+        prevY = currY;
+        currX = e.clientX - canvas.offsetLeft;
+        currY = e.clientY - canvas.offsetTop;
+        emitDraw();
+      }
+    }
+  }
+
+</script>
+
+<body onload="init()">
+  <canvas id="can" width="400" height="400" style="position:absolute;top:10%;left:10%;border:2px solid;"></canvas>
+  <img id="canvasimg" style="position:absolute;top:10%;left:52%;" style="display:none;">
+  <input type="button" value="clear" id="clr" size="23" onclick="emitErase(true)" style="position:absolute;top:55%;left:15%;">
+</body>
+
+</html>
