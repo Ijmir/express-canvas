@@ -52,7 +52,7 @@
         canvas.addEventListener("mouseout", function (e) {
             findxy('out', e)
         }, false);
-        
+
         canvas.addEventListener("touchstart", function (e) {
             console.log('touchstart');
             findxy('down', e)
@@ -65,6 +65,8 @@
             console.log('touchmove');
             findxy('move', e)
         }, false);
+
+        resizeCanvas();
     }
 
     function color(obj) {
@@ -100,7 +102,7 @@
         ctx.beginPath();
         ctx.fillStyle = x;
         ctx.strokeStyle = x;
-        ctx.arc(pX || currX, pY || currY, 4, 0, 2 * Math.PI);
+        ctx.arc(pX || currX, pY || currY, 8, 0, 2 * Math.PI);
         ctx.fill();
         ctx.stroke();
     }
@@ -155,6 +157,17 @@
             }
         }
     }
+
+    function resizeCanvas() {
+        // console.log(window.innerWidth, document.documentElement.clientWidth, document.body.clientWidth);
+        canvas.width = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+        canvas.height = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
+
+        WIDTH = canvas.width;
+        HEIGHT = canvas.height;
+
+        // clearScreen();
+    }
 </script>
 <style>
     #mycanvas {
@@ -167,9 +180,11 @@
         user-select: none;
     }
 </style>
-<body onload="init()">
+
+<body onload="init()" onresize="resizeCanvas()">
     <div id="mycanvas">
-        <canvas id="can" width="400" height="400" style="position:absolute;top:10%;left:10%;border:2px solid;"></canvas>
+        <!-- <canvas id="can" width="400" height="400" style="position:absolute;top:10%;left:10%;border:2px solid;"></canvas> -->
+        <canvas id="can"></canvas>
         <img id="canvasimg" style="position:absolute;top:10%;left:52%;" style="display:none;">
         <input type="button" value="clear" id="clr" size="23" onclick="emitErase(true)" style="position:absolute;top:55%;left:15%;">
     </div>
